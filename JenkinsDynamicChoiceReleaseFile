@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Get List of All Branches of Repo') {
+            steps {
+                sh 'git ls-remote --heads https://github.com/vijay2181/java-maven-SampleWarApp.git | awk "{print \$2}" | cut -d "/" -f 3 > /tmp/branch_names.txt'
+            }
+        }
+        stage('Capture Script Output') {
+            steps {
+                script {
+                    env.SCRIPT_OPTIONS = readFile('/tmp/branch_names.txt').trim().split('\n').join('\n')
+                }
+            }
+        }
+        stage('Run Pipeline with Parameters') {
+            steps {
+                script {
+                    def userInput = input message: 'Select an option:',
+                        parameters: [choice(name: 'SCRIPT_OPTION', choices: env.SCRIPT_OPTIONS)]
+                    echo "You selected: ${userInput}"
+                }
+            }
+        }
+    }
+}
